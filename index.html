@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+    <script src="https://unpkg.com/modern-screenshot@4.5.0/dist/index.js"></script>
     <style>
         * {
             margin: 0;
@@ -940,6 +941,220 @@
             background: #f0f0f0;
             color: #333;
         }
+
+        /* 截图按钮 */
+        .screenshot-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .screenshot-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5);
+        }
+
+        .screenshot-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        /* 截图预览弹窗 */
+        .screenshot-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .screenshot-modal.show {
+            display: flex;
+        }
+
+        .screenshot-modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screenshot-modal-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #2d5a3f, #3d7a5a);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .screenshot-modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .screenshot-modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screenshot-preview {
+            flex: 1;
+            overflow: auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        .screenshot-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .screenshot-actions {
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .screenshot-action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .screenshot-action-btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .screenshot-action-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* 截图时的特殊容器 */
+        .screenshot-container {
+            background: white;
+            padding: 20px;
+            width: 400px;
+        }
+
+        .screenshot-container .screenshot-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2d5a3f;
+            margin-bottom: 15px;
+        }
+
+        .screenshot-container .screenshot-header h2 {
+            color: #1a472a;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .screenshot-container .screenshot-header p {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .screenshot-container .course-item {
+            padding: 12px;
+            border-left: 4px solid #2d5a3f;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .screenshot-container .course-item-name {
+            font-weight: 600;
+            color: #1a472a;
+            font-size: 0.95rem;
+        }
+
+        .screenshot-container .course-item-name-en {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .screenshot-container .course-item-info {
+            display: flex;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .screenshot-container .course-item-price {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
+        .screenshot-container .screenshot-footer {
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .screenshot-btn {
+                bottom: 20px;
+                right: 15px;
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+            .screenshot-modal-content {
+                max-width: 95%;
+                max-height: 85%;
+            }
+            .screenshot-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1065,6 +1280,32 @@
     <button class="qr-btn" onclick="showQRCode()">
         📱 手机扫码查看
     </button>
+
+    <button class="screenshot-btn" onclick="takeScreenshot()">
+        📸 生成长图
+    </button>
+
+    <!-- 截图弹窗 -->
+    <div class="screenshot-modal" id="screenshotModal">
+        <div class="screenshot-modal-content">
+            <div class="screenshot-modal-header">
+                <h3>📸 长图预览</h3>
+                <button class="screenshot-modal-close" onclick="closeScreenshotModal()">&times;</button>
+            </div>
+            <div class="screenshot-preview" id="screenshotPreview"></div>
+            <div class="screenshot-actions">
+                <button class="screenshot-action-btn primary" onclick="downloadScreenshot()">
+                    💾 保存图片
+                </button>
+                <button class="screenshot-action-btn secondary" onclick="closeScreenshotModal()">
+                    ✕ 关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏的截图容器 -->
+    <div id="screenshotSource" style="position: absolute; left: -9999px; top: 0;"></div>
 
     <!-- 二维码弹窗 -->
     <div class="qr-modal" id="qrModal" onclick="hideQRCode(event)">
@@ -1611,8 +1852,100 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 hideQRCode();
+                closeScreenshotModal();
             }
         });
+
+        // 截图功能
+        let currentScreenshotBlob = null;
+
+        async function takeScreenshot() {
+            const btn = document.querySelector('.screenshot-btn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 生成中...';
+
+            try {
+                // 创建截图内容
+                const container = document.getElementById('screenshotSource');
+                container.innerHTML = generateScreenshotHTML();
+                container.style.left = '0';
+                container.style.position = 'fixed';
+                container.style.zIndex = '-1';
+                container.style.opacity = '1';
+
+                // 等待渲染
+                await new Promise(r => setTimeout(r, 100));
+
+                // 使用 modern-screenshot
+                const dataUrl = await modernScreenshot.domToPng(container.querySelector('.screenshot-container'), {
+                    scale: 2,
+                    quality: 0.95
+                });
+
+                // 隐藏容器
+                container.style.left = '-9999px';
+
+                // 显示预览
+                const preview = document.getElementById('screenshotPreview');
+                preview.innerHTML = `<img src="${dataUrl}" alt="截图预览">`;
+
+                // 保存 blob 用于下载
+                const response = await fetch(dataUrl);
+                currentScreenshotBlob = await response.blob();
+
+                document.getElementById('screenshotModal').classList.add('show');
+
+            } catch (error) {
+                console.error('截图失败:', error);
+                alert('截图生成失败，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📸 生成长图';
+            }
+        }
+
+        function generateScreenshotHTML() {
+            const courses = golfCourses.sort((a, b) => a.price - b.price);
+            const now = new Date().toLocaleDateString('zh-CN');
+
+            return `
+                <div class="screenshot-container">
+                    <div class="screenshot-header">
+                        <h2>⛳ 清迈高尔夫球场指南</h2>
+                        <p>Chiang Mai Golf Courses · ${now}</p>
+                    </div>
+                    ${courses.map(course => `
+                        <div class="course-item" style="border-left-color: ${getMarkerColor(course)}">
+                            <div class="course-item-name">${course.name}</div>
+                            <div class="course-item-name-en">${course.nameEn}</div>
+                            <div class="course-item-info">
+                                <span>🕳️ ${course.holes}洞</span>
+                                <span>🚗 ${course.distance}</span>
+                                <span class="course-item-price">฿${course.price.toLocaleString()}</span>
+                                ${course.hasNight ? '<span>🌙</span>' : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="screenshot-footer">
+                        🌐 chiang-mai-golf.vercel.app
+                    </div>
+                </div>
+            `;
+        }
+
+        function downloadScreenshot() {
+            if (!currentScreenshotBlob) return;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(currentScreenshotBlob);
+            link.download = `清迈高尔夫球场_${new Date().toISOString().slice(0,10)}.png`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function closeScreenshotModal() {
+            document.getElementById('screenshotModal').classList.remove('show');
+        }
     </script>
 </body>
 </html>
