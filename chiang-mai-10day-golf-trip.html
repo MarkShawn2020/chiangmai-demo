@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清迈十日高尔夫之旅 | 10-Day Golf Trip Planner</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d2818 0%, #1a472a 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .trip-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .trip-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 12px 25px;
+            border-radius: 10px;
+        }
+
+        .trip-stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .trip-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 150px);
+        }
+
+        .sidebar {
+            width: 450px;
+            background: #fff;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #2d5a3f 0%, #3d7a5a 100%);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .timeline {
+            padding: 20px;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid #2d5a3f;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .day-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .day-card.active {
+            border-left-color: #e74c3c;
+            background: #fef9f9;
+        }
+
+        .day-card.rest-day {
+            border-left-color: #9b59b6;
+        }
+
+        .day-header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-number {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a472a;
+        }
+
+        .day-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .day-content {
+            padding: 15px;
+        }
+
+        .course-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a472a;
+            margin-bottom: 4px;
+        }
+
+        .course-name-en {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .day-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .info-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #f0f7f3;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #2d5a3f;
+        }
+
+        .price-tag {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .day-tips {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #2e7d32;
+            margin-top: 10px;
+        }
+
+        .day-tips strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #map {
+            flex: 1;
+            z-index: 1;
+        }
+
+        .summary-panel {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+        .summary-panel h3 {
+            color: #1a472a;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: #666;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #1a472a;
+        }
+
+        .summary-total {
+            background: linear-gradient(135deg, #2d5a3f, #3d7a5a);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .summary-total-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .summary-total-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .route-line {
+            stroke: #3498db;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 10, 5;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-size: 0.85rem;
+        }
+
+        .legend h4 {
+            margin-bottom: 10px;
+            color: #1a472a;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 470px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+        }
+
+        /* 二维码按钮和弹窗 */
+        .qr-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 600px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .qr-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.5);
+        }
+
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-modal.show {
+            display: flex;
+        }
+
+        .qr-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .qr-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .qr-modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .qr-modal h3 {
+            color: #1a472a;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .qr-modal p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #qrcode canvas {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .qr-tips {
+            background: #f0f7f3;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #2d5a3f;
+        }
+
+        .qr-tips strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media print {
+            .print-btn, .legend, .summary-panel {
+                display: none !important;
+            }
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+            #map {
+                height: 400px;
+            }
+        }
+
+        .day-sequence {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            overflow-x: auto;
+        }
+
+        .day-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .day-dot.active {
+            background: #2d5a3f;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .day-dot.rest {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .day-connector {
+            width: 20px;
+            height: 2px;
+            background: #dee2e6;
+            flex-shrink: 0;
+        }
+
+        .difficulty-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .difficulty-easy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .weather-tip {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #1565c0;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .nav-btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .nav-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⛳ 清迈十日高尔夫之旅</h1>
+        <p>专为初学者设计的经济实惠行程 | Best Value 10-Day Golf Trip</p>
+        <div class="trip-stats">
+            <div class="trip-stat">
+                <div class="trip-stat-value">10</div>
+                <div class="trip-stat-label">天行程</div>
+            </div>
+            <div class="trip-stat">
+                <div class="trip-stat-value">10</div>
+                <div class="trip-stat-label">场球</div>
+            </div>
+            <div class="trip-stat">
+                <div class="trip-stat-value">฿19,550</div>
+                <div class="trip-stat-label">总果岭费</div>
+            </div>
+            <div class="trip-stat">
+                <div class="trip-stat-value">฿1,955</div>
+                <div class="trip-stat-label">日均费用</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📅 每日行程安排</h2>
+            </div>
+
+            <div class="day-sequence" id="daySequence"></div>
+
+            <div class="timeline" id="timeline"></div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="summary-panel">
+            <h3>💰 费用明细</h3>
+            <div class="summary-item">
+                <span class="summary-label">果岭费总计</span>
+                <span class="summary-value">฿19,550</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">球童小费 (10天)</span>
+                <span class="summary-value">฿3,000</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">预估交通费</span>
+                <span class="summary-value">฿4,000</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">餐饮预算</span>
+                <span class="summary-value">฿5,000</span>
+            </div>
+            <div class="summary-total">
+                <div class="summary-total-label">10天总预算</div>
+                <div class="summary-total-value">฿31,550</div>
+                <div style="font-size: 0.8rem; margin-top: 5px;">≈ ¥6,310 / $880</div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn nav-btn-primary" onclick="window.open('chiang-mai-golf-map.html')">
+                    🗺️ 查看完整地图
+                </button>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h4>行程说明</h4>
+            <div class="legend-item">
+                <span class="difficulty-badge difficulty-easy">初学友好</span>
+                <span>适合新手</span>
+            </div>
+            <div class="legend-item">
+                <span class="difficulty-badge difficulty-medium">中等难度</span>
+                <span>有一定挑战</span>
+            </div>
+            <div class="legend-item" style="margin-top: 10px;">
+                <div class="legend-color" style="background: #2d5a3f;"></div>
+                <span>打球日</span>
+            </div>
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+        🖨️ 打印行程单
+    </button>
+
+    <button class="qr-btn" onclick="showQRCode()">
+        📱 手机扫码查看
+    </button>
+
+    <!-- 二维码弹窗 -->
+    <div class="qr-modal" id="qrModal" onclick="hideQRCode(event)">
+        <div class="qr-modal-content" onclick="event.stopPropagation()">
+            <button class="qr-modal-close" onclick="hideQRCode()">&times;</button>
+            <h3>📱 手机扫码查看行程</h3>
+            <p>使用微信、支付宝或相机扫描二维码</p>
+            <div id="qrcode"></div>
+            <div class="qr-tips">
+                <strong>💡 提示：</strong>
+                扫码后可在手机上随时查看行程安排，方便旅途中参考。支持离线保存到相册！
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 十日行程数据 - 专为初学者设计的经济实惠方案
+        const tripDays = [
+            {
+                day: 1,
+                date: "第一天",
+                type: "golf",
+                course: {
+                    name: "皇家清迈高尔夫俱乐部",
+                    nameEn: "Royal Chiang Mai Golf Club",
+                    lat: 18.8234,
+                    lng: 98.9567,
+                    price: 1650,
+                    distance: "20分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "第一天选择距离最近、价格最实惠的球场热身，球道宽阔适合初学者。建议早上7点出发，避开午间炎热。",
+                schedule: "06:30 出发 → 07:00 抵达 → 07:30 开球 → 12:00 结束"
+            },
+            {
+                day: 2,
+                date: "第二天",
+                type: "golf",
+                course: {
+                    name: "北山高尔夫俱乐部",
+                    nameEn: "North Hill Golf Club",
+                    lat: 18.9234,
+                    lng: 99.0456,
+                    price: 2200,
+                    distance: "25分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "北山球场果岭较快但球道宽敞，适合练习推杆技术。下午可在球场餐厅休息，欣赏山景。",
+                schedule: "06:30 出发 → 07:00 抵达 → 07:30 开球 → 12:30 结束"
+            },
+            {
+                day: 3,
+                date: "第三天",
+                type: "golf",
+                course: {
+                    name: "美卓高尔夫俱乐部",
+                    nameEn: "Mae Jo Golf Club & Resort",
+                    lat: 18.9012,
+                    lng: 99.0134,
+                    price: 2800,
+                    distance: "30分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "环境优美的球场，自然风光宜人。球场维护良好，适合放松心情享受打球乐趣。",
+                schedule: "06:30 出发 → 07:00 抵达 → 07:30 开球 → 12:30 结束"
+            },
+            {
+                day: 4,
+                date: "第四天",
+                type: "golf",
+                course: {
+                    name: "嘉山坤丹高尔夫度假村",
+                    nameEn: "Gassan Khuntan Golf Resort",
+                    lat: 18.4567,
+                    lng: 99.2234,
+                    price: 1450,
+                    priceNote: "下午场优惠价",
+                    distance: "50分钟",
+                    difficulty: "medium",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "选择下午场可享优惠价格！虽然路程较远，但山景球场风景绝佳，值得一去。建议下午1点出发。",
+                schedule: "12:30 出发 → 13:30 抵达 → 14:00 开球 → 18:30 结束"
+            },
+            {
+                day: 5,
+                date: "第五天",
+                type: "golf",
+                course: {
+                    name: "嘉山传奇高尔夫俱乐部",
+                    nameEn: "Gassan Legacy Golf Club",
+                    lat: 18.6234,
+                    lng: 99.0823,
+                    price: 1150,
+                    priceNote: "夜间场优惠价",
+                    distance: "40分钟",
+                    difficulty: "medium",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "体验独特的夜间高尔夫！灯光球场氛围独特，温度凉爽舒适。下午可在酒店休息，傍晚出发。",
+                schedule: "16:30 出发 → 17:30 抵达 → 18:00 开球 → 22:30 结束"
+            },
+            {
+                day: 6,
+                date: "第六天",
+                type: "golf",
+                course: {
+                    name: "皇家清迈高尔夫俱乐部",
+                    nameEn: "Royal Chiang Mai Golf Club",
+                    lat: 18.8234,
+                    lng: 98.9567,
+                    price: 1650,
+                    distance: "20分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "回到熟悉的球场，检验这几天的进步！可以尝试挑战自己之前的成绩。",
+                schedule: "06:30 出发 → 07:00 抵达 → 07:30 开球 → 12:00 结束"
+            },
+            {
+                day: 7,
+                date: "第七天",
+                type: "golf",
+                course: {
+                    name: "嘉山全景高尔夫俱乐部",
+                    nameEn: "Gassan Panorama Golf Club",
+                    lat: 18.5890,
+                    lng: 99.1567,
+                    price: 1650,
+                    priceNote: "下午场优惠价",
+                    distance: "45分钟",
+                    difficulty: "medium",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "拥有壮观全景视野的球场！选择下午场享受优惠价格，同时避开上午人流高峰。",
+                schedule: "12:30 出发 → 13:30 抵达 → 14:00 开球 → 18:30 结束"
+            },
+            {
+                day: 8,
+                date: "第八天",
+                type: "golf",
+                course: {
+                    name: "北山高尔夫俱乐部",
+                    nameEn: "North Hill Golf Club",
+                    lat: 18.9234,
+                    lng: 99.0456,
+                    price: 1200,
+                    priceNote: "夜间场优惠价",
+                    distance: "25分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "再次体验夜间打球！北山的夜间球场设施完善，灯光明亮，是夜场的最佳选择之一。",
+                schedule: "16:30 出发 → 17:00 抵达 → 17:30 开球 → 22:00 结束"
+            },
+            {
+                day: 9,
+                date: "第九天",
+                type: "golf",
+                course: {
+                    name: "清迈茵塔侬高尔夫度假村",
+                    nameEn: "Chiang Mai Inthanon Golf & Resort",
+                    lat: 18.5234,
+                    lng: 98.7890,
+                    price: 2600,
+                    distance: "55分钟",
+                    difficulty: "medium",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "行程接近尾声，来一场山谷球场体验！位于前往因塔侬山路上，可顺路欣赏沿途风景。",
+                schedule: "06:00 出发 → 07:00 抵达 → 07:30 开球 → 12:30 结束"
+            },
+            {
+                day: 10,
+                date: "第十天",
+                type: "golf",
+                course: {
+                    name: "美卓高尔夫俱乐部",
+                    nameEn: "Mae Jo Golf Club & Resort",
+                    lat: 18.9012,
+                    lng: 99.0134,
+                    price: 2800,
+                    distance: "30分钟",
+                    difficulty: "easy",
+                    holes: 18,
+                    par: 72
+                },
+                tips: "完美收官！回到环境优美的美卓球场，在轻松愉快的氛围中结束这趟高尔夫之旅。",
+                schedule: "06:30 出发 → 07:00 抵达 → 07:30 开球 → 12:30 结束"
+            }
+        ];
+
+        // 初始化地图
+        const map = L.map('map').setView([18.7, 99.0], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 添加清迈市中心标记
+        L.marker([18.7883, 98.9936], {
+            icon: L.divIcon({
+                className: 'city-marker',
+                html: '<div style="background: #2c3e50; color: white; padding: 8px 12px; border-radius: 20px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🏨 酒店/清迈古城</div>',
+                iconSize: [140, 30],
+                iconAnchor: [70, 15]
+            })
+        }).addTo(map);
+
+        // 创建球场标记
+        const markers = {};
+        const dayColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#e91e63', '#00bcd4', '#8bc34a'];
+
+        tripDays.forEach((day, index) => {
+            if (day.type === 'golf') {
+                const color = dayColors[index % dayColors.length];
+                const icon = L.divIcon({
+                    className: 'day-marker',
+                    html: `<div style="
+                        background: ${color};
+                        color: white;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 14px;
+                        font-weight: bold;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                        border: 3px solid white;
+                    ">${day.day}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker([day.course.lat, day.course.lng], { icon }).addTo(map);
+
+                const popupContent = `
+                    <div style="padding: 10px; min-width: 200px;">
+                        <div style="font-weight: 600; color: #1a472a; margin-bottom: 5px;">Day ${day.day}: ${day.course.name}</div>
+                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">${day.course.nameEn}</div>
+                        <div style="font-size: 1.2rem; font-weight: 700; color: #e74c3c;">฿${day.course.price.toLocaleString()}</div>
+                        ${day.course.priceNote ? `<div style="font-size: 0.75rem; color: #888;">${day.course.priceNote}</div>` : ''}
+                        <div style="font-size: 0.8rem; color: #555; margin-top: 8px;">
+                            📍 ${day.course.distance} | ⛳ Par ${day.course.par}
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                markers[day.day] = marker;
+            }
+        });
+
+        // 绘制行程路线
+        const routeCoords = [];
+        routeCoords.push([18.7883, 98.9936]); // 起点：酒店
+
+        tripDays.forEach(day => {
+            if (day.type === 'golf') {
+                routeCoords.push([day.course.lat, day.course.lng]);
+            }
+        });
+
+        L.polyline(routeCoords, {
+            color: '#3498db',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '10, 10'
+        }).addTo(map);
+
+        // 渲染日期序列
+        function renderDaySequence() {
+            const container = document.getElementById('daySequence');
+            container.innerHTML = tripDays.map((day, index) => {
+                const isRest = day.type === 'rest';
+                return `
+                    <div class="day-dot ${isRest ? 'rest' : ''}" data-day="${day.day}" onclick="scrollToDay(${day.day})">
+                        ${day.day}
+                    </div>
+                    ${index < tripDays.length - 1 ? '<div class="day-connector"></div>' : ''}
+                `;
+            }).join('');
+        }
+
+        // 渲染时间线
+        function renderTimeline() {
+            const container = document.getElementById('timeline');
+            container.innerHTML = tripDays.map(day => {
+                if (day.type === 'rest') {
+                    return `
+                        <div class="day-card rest-day" data-day="${day.day}">
+                            <div class="day-header">
+                                <span class="day-number">Day ${day.day}</span>
+                                <span class="day-date">${day.date}</span>
+                            </div>
+                            <div class="day-content">
+                                <div class="course-name">🧘 休息日</div>
+                                <div class="course-name-en">Rest Day - Explore Chiang Mai</div>
+                                <div class="day-tips">
+                                    <strong>💡 推荐活动：</strong>
+                                    ${day.tips}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const difficultyClass = day.course.difficulty === 'easy' ? 'difficulty-easy' :
+                                        day.course.difficulty === 'medium' ? 'difficulty-medium' : 'difficulty-hard';
+                const difficultyText = day.course.difficulty === 'easy' ? '初学友好' :
+                                       day.course.difficulty === 'medium' ? '中等难度' : '挑战性强';
+
+                return `
+                    <div class="day-card" data-day="${day.day}">
+                        <div class="day-header">
+                            <span class="day-number">Day ${day.day}</span>
+                            <span class="day-date">${day.date}</span>
+                        </div>
+                        <div class="day-content">
+                            <div class="course-name">${day.course.name}</div>
+                            <div class="course-name-en">${day.course.nameEn}</div>
+                            <div class="day-info">
+                                <span class="info-tag">🕳️ ${day.course.holes}洞</span>
+                                <span class="info-tag">⛳ Par ${day.course.par}</span>
+                                <span class="info-tag">🚗 ${day.course.distance}</span>
+                                <span class="info-tag price-tag">฿${day.course.price.toLocaleString()}</span>
+                                <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
+                            </div>
+                            ${day.course.priceNote ? `<div style="font-size: 0.75rem; color: #888; margin-bottom: 8px;">💡 ${day.course.priceNote}</div>` : ''}
+                            <div style="font-size: 0.8rem; color: #555; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                                🕐 ${day.schedule}
+                            </div>
+                            <div class="day-tips">
+                                <strong>💡 今日贴士：</strong>
+                                ${day.tips}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 添加点击事件
+            container.querySelectorAll('.day-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const dayNum = parseInt(card.dataset.day);
+                    const day = tripDays.find(d => d.day === dayNum);
+
+                    // 高亮卡片
+                    container.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+
+                    // 高亮日期点
+                    document.querySelectorAll('.day-dot').forEach(dot => {
+                        dot.classList.toggle('active', parseInt(dot.dataset.day) === dayNum);
+                    });
+
+                    // 移动地图并打开弹窗
+                    if (day.type === 'golf' && markers[dayNum]) {
+                        map.setView([day.course.lat, day.course.lng], 12);
+                        markers[dayNum].openPopup();
+                    }
+                });
+            });
+        }
+
+        function scrollToDay(dayNum) {
+            const card = document.querySelector(`.day-card[data-day="${dayNum}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.click();
+            }
+        }
+
+        // 初始化
+        renderDaySequence();
+        renderTimeline();
+
+        // 自动选中第一天
+        document.querySelector('.day-card')?.click();
+
+        // 二维码功能
+        let qrGenerated = false;
+
+        function showQRCode() {
+            const modal = document.getElementById('qrModal');
+            modal.classList.add('show');
+
+            if (!qrGenerated) {
+                const currentUrl = window.location.href;
+                const qrcodeContainer = document.getElementById('qrcode');
+                qrcodeContainer.innerHTML = '';
+
+                // 使用在线API生成二维码（更可靠）
+                const qrImg = document.createElement('img');
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}&bgcolor=ffffff&color=1a472a`;
+                qrImg.alt = 'QR Code';
+                qrImg.style.cssText = 'border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);';
+                qrImg.onload = function() {
+                    qrGenerated = true;
+                };
+                qrImg.onerror = function() {
+                    // 备用方案
+                    qrcodeContainer.innerHTML = `
+                        <div style="width: 200px; height: 200px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #666;">
+                            二维码加载失败<br>请刷新重试
+                        </div>
+                    `;
+                };
+                qrcodeContainer.appendChild(qrImg);
+            }
+        }
+
+        function hideQRCode(event) {
+            if (!event || event.target === document.getElementById('qrModal')) {
+                document.getElementById('qrModal').classList.remove('show');
+            }
+        }
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideQRCode();
+            }
+        });
+    </script>
+</body>
+</html>
