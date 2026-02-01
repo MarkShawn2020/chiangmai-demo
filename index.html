@@ -266,17 +266,214 @@
         }
 
         @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+                margin-bottom: 4px;
+            }
+            .header p {
+                font-size: 0.75rem;
+            }
+            .stats-bar {
+                padding: 8px;
+                margin-top: 8px;
+                gap: 5px;
+            }
+            .stat-value {
+                font-size: 1rem;
+            }
+            .stat-label {
+                font-size: 0.65rem;
+            }
             .container {
                 flex-direction: column;
+                height: calc(100vh - 90px);
+                position: relative;
             }
             .sidebar {
                 width: 100%;
-                height: 50%;
+                height: 45%;
                 order: 2;
+                position: relative;
+                z-index: 10;
+                border-radius: 20px 20px 0 0;
+                margin-top: -20px;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            }
+            .sidebar-header {
+                padding: 12px 15px;
+                border-radius: 20px 20px 0 0;
+            }
+            .sidebar-header h2 {
+                font-size: 1rem;
+            }
+            .filter-buttons {
+                gap: 6px;
+                margin-top: 8px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .filter-btn {
+                padding: 8px 14px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
             #map {
-                height: 50%;
+                height: 55%;
                 order: 1;
+            }
+            .course-list {
+                padding: 8px;
+            }
+            .course-card {
+                margin-bottom: 10px;
+                border-radius: 10px;
+            }
+            .course-content {
+                padding: 12px;
+            }
+            .course-name {
+                font-size: 0.95rem;
+            }
+            .course-name-en {
+                font-size: 0.7rem;
+                margin-bottom: 8px;
+            }
+            .course-info {
+                gap: 5px;
+                margin-bottom: 8px;
+            }
+            .info-tag {
+                padding: 3px 8px;
+                font-size: 0.7rem;
+            }
+            .price {
+                font-size: 1.1rem;
+            }
+            .price-note {
+                font-size: 0.65rem;
+            }
+            .card-route-btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+            .legend {
+                display: none;
+            }
+            .route-panel {
+                left: 10px;
+                right: 10px;
+                top: auto;
+                bottom: 50%;
+                min-width: auto;
+                max-width: none;
+                border-radius: 15px;
+                padding: 12px;
+                transform: translateY(50%);
+            }
+            .route-panel h3 {
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+            .origin-selector {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .origin-selector select {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .transport-modes {
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+            .transport-mode {
+                padding: 10px 6px;
+            }
+            .route-destination {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .route-info {
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            .route-stat {
+                padding: 10px;
+            }
+            .route-stat-value {
+                font-size: 1.2rem;
+            }
+            .route-buttons {
+                gap: 8px;
+            }
+            .route-btn {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+            .route-steps {
+                max-height: 120px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            .qr-btn {
+                bottom: auto;
+                top: 10px;
+                right: 10px;
+                left: auto;
+                transform: none;
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                border-radius: 20px;
+            }
+            .qr-btn:hover {
+                transform: translateY(-2px);
+            }
+            .qr-modal-content {
+                margin: 15px;
+                padding: 20px;
+                max-width: calc(100% - 30px);
+            }
+            .qr-modal h3 {
+                font-size: 1.1rem;
+            }
+            .popup-content {
+                min-width: 200px;
+                padding: 12px;
+            }
+            .popup-title {
+                font-size: 0.95rem;
+            }
+            .popup-price {
+                font-size: 1.2rem;
+            }
+            .nav-btn {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .stat-value {
+                font-size: 0.9rem;
+            }
+            .sidebar {
+                height: 40%;
+            }
+            #map {
+                height: 60%;
+            }
+            .filter-btn {
+                padding: 6px 10px;
+                font-size: 0.7rem;
             }
         }
 
