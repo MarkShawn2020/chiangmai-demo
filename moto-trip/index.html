@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清迈到曼谷摩旅 | Chiang Mai to Bangkok Moto Trip</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 380px;
+            background: #fff;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+        }
+
+        .day-selector {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        .day-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 15px 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .day-btn:hover {
+            background: #fff;
+        }
+
+        .day-btn.active {
+            background: #fff;
+            color: #e74c3c;
+            border-bottom-color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .day-header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 20px;
+        }
+
+        .day-title {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .day-route {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .day-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+
+        .day-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .points-list {
+            padding: 10px;
+        }
+
+        .point-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .point-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .point-card.start { border-left: 4px solid #27ae60; }
+        .point-card.end { border-left: 4px solid #e74c3c; }
+        .point-card.gas { border-left: 4px solid #f39c12; }
+        .point-card.hotel { border-left: 4px solid #9b59b6; }
+        .point-card.scenic { border-left: 4px solid #3498db; }
+        .point-card.food { border-left: 4px solid #e67e22; }
+
+        .point-content {
+            padding: 15px;
+        }
+
+        .point-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+        }
+
+        .point-type.start { background: #d5f4e6; color: #1e8449; }
+        .point-type.end { background: #fadbd8; color: #c0392b; }
+        .point-type.gas { background: #fef9e7; color: #b7950b; }
+        .point-type.hotel { background: #ebdef0; color: #7d3c98; }
+        .point-type.scenic { background: #d6eaf8; color: #2471a3; }
+        .point-type.food { background: #fbeee6; color: #ca6f1e; }
+
+        .point-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .point-name-en {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .point-desc {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .point-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        #map {
+            flex: 1;
+            z-index: 1;
+        }
+
+        .route-line {
+            stroke: #e74c3c;
+            stroke-width: 4;
+            fill: none;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 50%;
+                order: 2;
+            }
+
+            #map {
+                height: 50%;
+                order: 1;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .header-stats {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="../" class="back-btn">← 返回</a>
+            <h1>清迈到曼谷摩旅</h1>
+        </div>
+        <div class="header-stats">
+            <div class="stat">📏 <span id="totalDistance">~700</span> km</div>
+            <div class="stat">📅 <span id="totalDays">3</span> 天</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="day-selector" id="daySelector"></div>
+            <div class="day-header" id="dayHeader">
+                <div class="day-title" id="dayTitle">第 1 天</div>
+                <div class="day-route" id="dayRoute">清迈 → 南邦</div>
+                <div class="day-stats">
+                    <div class="day-stat">📏 <span id="dayDistance">120</span> km</div>
+                    <div class="day-stat">⏱️ <span id="dayTime">~3</span> 小时</div>
+                </div>
+            </div>
+            <div class="points-list" id="pointsList"></div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // 行程数据 - 可根据实际规划修改
+        const tripData = {
+            days: [
+                {
+                    day: 1,
+                    title: "第 1 天",
+                    route: "清迈 → 南邦",
+                    distance: 100,
+                    time: "~2.5",
+                    points: [
+                        {
+                            id: 1,
+                            type: "start",
+                            typeName: "出发",
+                            name: "清迈古城",
+                            nameEn: "Chiang Mai Old City",
+                            lat: 18.7883,
+                            lng: 98.9936,
+                            desc: "行程起点，清迈古城区",
+                            time: "08:00"
+                        },
+                        {
+                            id: 2,
+                            type: "gas",
+                            typeName: "加油",
+                            name: "PTT 加油站",
+                            nameEn: "PTT Gas Station",
+                            lat: 18.6500,
+                            lng: 99.1000,
+                            desc: "出城后第一个加油站"
+                        },
+                        {
+                            id: 3,
+                            type: "scenic",
+                            typeName: "景点",
+                            name: "南邦马车",
+                            nameEn: "Lampang Horse Carriage",
+                            lat: 18.2913,
+                            lng: 99.4929,
+                            desc: "南邦特色马车体验，泰国唯一保留马车的城市"
+                        },
+                        {
+                            id: 4,
+                            type: "food",
+                            typeName: "美食",
+                            name: "南邦夜市",
+                            nameEn: "Kad Kong Ta Night Market",
+                            lat: 18.2889,
+                            lng: 99.5058,
+                            desc: "品尝当地特色小吃"
+                        },
+                        {
+                            id: 5,
+                            type: "hotel",
+                            typeName: "住宿",
+                            name: "南邦住宿",
+                            nameEn: "Lampang Hotel",
+                            lat: 18.2920,
+                            lng: 99.5010,
+                            desc: "推荐：Riverside Guest House"
+                        }
+                    ]
+                },
+                {
+                    day: 2,
+                    title: "第 2 天",
+                    route: "南邦 → 素可泰",
+                    distance: 220,
+                    time: "~5",
+                    points: [
+                        {
+                            id: 6,
+                            type: "start",
+                            typeName: "出发",
+                            name: "南邦",
+                            nameEn: "Lampang",
+                            lat: 18.2920,
+                            lng: 99.5010,
+                            desc: "从南邦出发",
+                            time: "08:00"
+                        },
+                        {
+                            id: 7,
+                            type: "gas",
+                            typeName: "加油",
+                            name: "Shell 加油站",
+                            nameEn: "Shell Gas Station",
+                            lat: 17.8000,
+                            lng: 99.7000,
+                            desc: "途中加油"
+                        },
+                        {
+                            id: 8,
+                            type: "scenic",
+                            typeName: "景点",
+                            name: "素可泰历史公园",
+                            nameEn: "Sukhothai Historical Park",
+                            lat: 17.0170,
+                            lng: 99.7030,
+                            desc: "世界文化遗产，泰国第一王朝古都遗址"
+                        },
+                        {
+                            id: 9,
+                            type: "hotel",
+                            typeName: "住宿",
+                            name: "素可泰新城",
+                            nameEn: "New Sukhothai",
+                            lat: 17.0081,
+                            lng: 99.8264,
+                            desc: "推荐住在新城，设施更完善"
+                        }
+                    ]
+                },
+                {
+                    day: 3,
+                    title: "第 3 天",
+                    route: "素可泰 → 曼谷",
+                    distance: 380,
+                    time: "~6",
+                    points: [
+                        {
+                            id: 10,
+                            type: "start",
+                            typeName: "出发",
+                            name: "素可泰",
+                            nameEn: "Sukhothai",
+                            lat: 17.0081,
+                            lng: 99.8264,
+                            desc: "早起出发，今天路程最长",
+                            time: "07:00"
+                        },
+                        {
+                            id: 11,
+                            type: "gas",
+                            typeName: "加油",
+                            name: "PTT 加油站",
+                            nameEn: "PTT Gas Station",
+                            lat: 16.0000,
+                            lng: 100.1000,
+                            desc: "彭世洛附近加油"
+                        },
+                        {
+                            id: 12,
+                            type: "food",
+                            typeName: "午餐",
+                            name: "那空沙旺",
+                            nameEn: "Nakhon Sawan",
+                            lat: 15.7047,
+                            lng: 100.1369,
+                            desc: "午餐休息，补充体力"
+                        },
+                        {
+                            id: 13,
+                            type: "gas",
+                            typeName: "加油",
+                            name: "加油站",
+                            nameEn: "Gas Station",
+                            lat: 14.8000,
+                            lng: 100.5000,
+                            desc: "最后一次加油"
+                        },
+                        {
+                            id: 14,
+                            type: "end",
+                            typeName: "终点",
+                            name: "曼谷",
+                            nameEn: "Bangkok",
+                            lat: 13.7563,
+                            lng: 100.5018,
+                            desc: "行程终点，胜利抵达曼谷！"
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // 计算总里程
+        const totalDistance = tripData.days.reduce((sum, day) => sum + day.distance, 0);
+        document.getElementById('totalDistance').textContent = totalDistance;
+        document.getElementById('totalDays').textContent = tripData.days.length;
+
+        // 初始化地图
+        const map = L.map('map').setView([16.5, 99.5], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 存储所有标记
+        let markers = [];
+        let routeLine = null;
+        let currentDay = 0;
+
+        // 图标配置
+        const iconConfig = {
+            start: { color: '#27ae60', icon: '🚀' },
+            end: { color: '#e74c3c', icon: '🏁' },
+            gas: { color: '#f39c12', icon: '⛽' },
+            hotel: { color: '#9b59b6', icon: '🏨' },
+            scenic: { color: '#3498db', icon: '📸' },
+            food: { color: '#e67e22', icon: '🍜' }
+        };
+
+        // 创建标记图标
+        function createIcon(type) {
+            const config = iconConfig[type] || iconConfig.scenic;
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    background: ${config.color};
+                    color: white;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                    border: 2px solid white;
+                ">${config.icon}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+        }
+
+        // 渲染天数选择器
+        function renderDaySelector() {
+            const container = document.getElementById('daySelector');
+            container.innerHTML = tripData.days.map((day, index) => `
+                <button class="day-btn ${index === currentDay ? 'active' : ''}"
+                        onclick="selectDay(${index})">
+                    Day ${day.day}
+                </button>
+            `).join('');
+        }
+
+        // 选择天数
+        function selectDay(dayIndex) {
+            currentDay = dayIndex;
+            renderDaySelector();
+            renderDayContent();
+            renderMap();
+        }
+
+        // 渲染当天内容
+        function renderDayContent() {
+            const day = tripData.days[currentDay];
+
+            document.getElementById('dayTitle').textContent = day.title;
+            document.getElementById('dayRoute').textContent = day.route;
+            document.getElementById('dayDistance').textContent = day.distance;
+            document.getElementById('dayTime').textContent = day.time;
+
+            const container = document.getElementById('pointsList');
+            container.innerHTML = day.points.map(point => `
+                <div class="point-card ${point.type}" onclick="focusPoint(${point.id})">
+                    <div class="point-content">
+                        <span class="point-type ${point.type}">${point.typeName}</span>
+                        <div class="point-name">${point.name}</div>
+                        <div class="point-name-en">${point.nameEn}</div>
+                        <div class="point-desc">${point.desc}</div>
+                        ${point.time ? `<div class="point-meta"><span>⏰ ${point.time}</span></div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染地图
+        function renderMap() {
+            // 清除旧标记
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            if (routeLine) map.removeLayer(routeLine);
+
+            const day = tripData.days[currentDay];
+            const coords = [];
+
+            // 添加标记
+            day.points.forEach(point => {
+                const marker = L.marker([point.lat, point.lng], {
+                    icon: createIcon(point.type)
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <strong>${point.name}</strong><br>
+                        <small>${point.nameEn}</small><br>
+                        <p style="margin-top: 8px; color: #666;">${point.desc}</p>
+                    </div>
+                `);
+
+                marker.pointId = point.id;
+                markers.push(marker);
+                coords.push([point.lat, point.lng]);
+            });
+
+            // 绘制路线
+            if (coords.length > 1) {
+                routeLine = L.polyline(coords, {
+                    color: '#e74c3c',
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }).addTo(map);
+            }
+
+            // 调整视图
+            if (coords.length > 0) {
+                const bounds = L.latLngBounds(coords);
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        // 聚焦到某个点
+        function focusPoint(pointId) {
+            const day = tripData.days[currentDay];
+            const point = day.points.find(p => p.id === pointId);
+            if (point) {
+                map.setView([point.lat, point.lng], 12);
+                const marker = markers.find(m => m.pointId === pointId);
+                if (marker) marker.openPopup();
+            }
+        }
+
+        // 初始化
+        renderDaySelector();
+        renderDayContent();
+        renderMap();
+    </script>
+</body>
+</html>
